@@ -28,3 +28,14 @@ const localStorageMock = (() => {
 
 Object.defineProperty(window, 'localStorage', { value: localStorageMock });
 
+// Global mock for WalletContext
+jest.mock('@/contexts/WalletContext', () => ({
+  useWallet: jest.fn().mockReturnValue({
+    address: '0x123',
+    isConnecting: false,
+    error: null,
+    connect: jest.fn(),
+    disconnect: jest.fn(),
+  }),
+  WalletProvider: ({ children }) => children,
+}));
