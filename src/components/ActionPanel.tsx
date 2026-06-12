@@ -2,13 +2,29 @@
 
 import { useWallet } from '@/contexts/WalletContext';
 
+export type ActionPanelDisabledReasons = {
+  submitMilestone?: string;
+  releaseFunds?: string;
+  dispute?: string;
+  viewSummary?: string;
+};
+
 export type ActionPanelProps = {
   status: 'Active' | 'Completed' | 'Disputed' | 'Pending';
   onSubmitMilestone?: () => void;
   onDispute?: () => void;
   onReleaseFunds?: () => void;
   onViewSummary?: () => void;
+  /** Disable every action button and announce a loading reason to AT users. */
+  isLoading?: boolean;
+  /** Render a role="alert" region above the actions when something went wrong. */
+  errorMessage?: string;
+  /** Per-action accessible reason for why a button is currently disabled. */
+  disabledReasons?: ActionPanelDisabledReasons;
 };
+
+const LOADING_REASON = 'Action is disabled while contract data is loading.';
+const LOADING_DESCRIPTION_ID = 'action-panel-loading-reason';
 
 const getActionButtons = (status: ActionPanelProps['status']) => {
   if (status === 'Active') {
@@ -29,11 +45,19 @@ const ActionPanel = ({
   onDispute,
   onReleaseFunds,
   onViewSummary,
+  isLoading = false,
+  errorMessage,
+  disabledReasons,
 }: ActionPanelProps) => {
   const actions = getActionButtons(status);
   const { address } = useWallet();
   const isWalletConnected = !!address;
   const noWalletMsg = 'Connect wallet to perform this action';
+
+  const describedBy = (perActionId: string | undefined) =>
+    isLoading ? LOADING_DESCRIPTION_ID : perActionId;
+  const describedById = (key: keyof ActionPanelDisabledReasons) =>
+    disabledReasons?.[key] ? `action-panel-${key}-reason` : undefined;
 
   const focusRingClass =
     'focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-blue-500';
@@ -56,54 +80,92 @@ const ActionPanel = ({
             {noWalletMsg}
           </p>
         )}
+        {errorMessage && (
+          <p
+            role="alert"
+            className="mt-2 text-sm text-rose-700 bg-rose-50 p-2 rounded-lg border border-rose-200"
+          >
+            {errorMessage}
+          </p>
+        )}
+        {isLoading && (
+          <span id={LOADING_DESCRIPTION_ID} className="sr-only">
+            {LOADING_REASON}
+          </span>
+        )}
+        {disabledReasons?.submitMilestone && (
+          <span id="action-panel-submitMilestone-reason" className="sr-only">
+            {disabledReasons.submitMilestone}
+          </span>
+        )}
+        {disabledReasons?.releaseFunds && (
+          <span id="action-panel-releaseFunds-reason" className="sr-only">
+            {disabledReasons.releaseFunds}
+          </span>
+        )}
+        {disabledReasons?.dispute && (
+          <span id="action-panel-dispute-reason" className="sr-only">
+            {disabledReasons.dispute}
+          </span>
+        )}
+        {disabledReasons?.viewSummary && (
+          <span id="action-panel-viewSummary-reason" className="sr-only">
+            {disabledReasons.viewSummary}
+          </span>
+        )}
       </div>
 
       <div className="space-y-3">
-        {actions.includes('Submit Milestone') && onSubmitMilestone && (
+        {actions.includes('Submit Milestone') && (
           <button
             type="button"
-            onClick={onSubmitMilestone}
-            disabled={!isWalletConnected}
+            onClick={() => onSubmitMilestone?.()}
+            disabled={!isWalletConnected || isLoading || !!disabledReasons?.submitMilestone}
             title={!isWalletConnected ? noWalletMsg : undefined}
             aria-label="Submit milestone for approval"
+            aria-describedby={describedBy(describedById('submitMilestone'))}
             className={`w-full rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed ${focusRingClass}`}
           >
             Submit Milestone
           </button>
         )}
 
-        {actions.includes('Release Funds') && onReleaseFunds && (
+        {actions.includes('Release Funds') && (
           <button
             type="button"
-            onClick={onReleaseFunds}
-            disabled={!isWalletConnected}
+            onClick={() => onReleaseFunds?.()}
+            disabled={!isWalletConnected || isLoading || !!disabledReasons?.releaseFunds}
             title={!isWalletConnected ? noWalletMsg : undefined}
             aria-label="Release funds to the contractor"
+            aria-describedby={describedBy(describedById('releaseFunds'))}
             className={`w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:border-slate-400 disabled:opacity-50 disabled:cursor-not-allowed ${focusRingClass}`}
           >
             Release Funds
           </button>
         )}
 
-        {actions.includes('Dispute') && onDispute && (
+        {actions.includes('Dispute') && (
           <button
             type="button"
-            onClick={onDispute}
-            disabled={!isWalletConnected}
+            onClick={() => onDispute?.()}
+            disabled={!isWalletConnected || isLoading || !!disabledReasons?.dispute}
             title={!isWalletConnected ? noWalletMsg : undefined}
             aria-label="Open a dispute for this contract"
+            aria-describedby={describedBy(describedById('dispute'))}
             className={`w-full rounded-2xl bg-rose-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-rose-700 disabled:opacity-50 disabled:cursor-not-allowed ${focusRingClass}`}
           >
             Dispute
           </button>
         )}
 
-        {actions.includes('View Summary') && onViewSummary && (
+        {actions.includes('View Summary') && (
           <button
             type="button"
-            onClick={onViewSummary}
+            onClick={() => onViewSummary?.()}
+            disabled={isLoading || !!disabledReasons?.viewSummary}
             aria-label="View contract summary details"
-            className={`w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:border-slate-400 ${focusRingClass}`}
+            aria-describedby={describedBy(describedById('viewSummary'))}
+            className={`w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:border-slate-400 disabled:opacity-50 disabled:cursor-not-allowed ${focusRingClass}`}
           >
             View Summary
           </button>
