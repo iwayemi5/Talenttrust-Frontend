@@ -1,7 +1,10 @@
+import StatusBadge, { StatusType } from './StatusBadge';
+import { usePreferences } from '@/lib/preferences';
+
 export type Milestone = {
   id: string;
   title: string;
-  status: 'Pending' | 'Completed' | 'Paid' | 'Disputed';
+  status: StatusType;
   payout: number;
   currency: string;
   dueDate?: string;
@@ -10,15 +13,6 @@ export type Milestone = {
 export type MilestonesListProps = {
   milestones: Milestone[];
 };
-
-const statusColors: Record<Milestone['status'], string> = {
-  Pending: 'bg-amber-100 text-amber-800',
-  Completed: 'bg-sky-100 text-sky-800',
-  Paid: 'bg-emerald-100 text-emerald-800',
-  Disputed: 'bg-rose-100 text-rose-800',
-};
-
-import { usePreferences } from '@/lib/preferences';
 
 const MilestonesList = ({ milestones }: MilestonesListProps) => {
   const { formatAmount } = usePreferences();
@@ -42,9 +36,7 @@ const MilestonesList = ({ milestones }: MilestonesListProps) => {
                 <p className="text-sm font-medium text-slate-600">{milestone.title}</p>
                 <p className="mt-1 text-sm text-slate-500">Due {milestone.dueDate ?? 'TBD'}</p>
               </div>
-              <span className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold ${statusColors[milestone.status]}`}>
-                {milestone.status}
-              </span>
+              <StatusBadge status={milestone.status} />
             </div>
             <div className="mt-4 flex items-center justify-between gap-4 border-t border-slate-200 pt-4 text-sm text-slate-600">
               <p>Payout</p>
