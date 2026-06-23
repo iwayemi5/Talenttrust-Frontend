@@ -1,8 +1,9 @@
 import React from 'react';
 import EmptyState from '../../components/EmptyState';
+import type { Reputation } from '@/types/domain';
 
 const ReputationPage: React.FC = () => {
-  const reputation: any[] = []; // Assume empty for now
+  const reputation: Reputation[] = [];
 
   return (
     <main className="min-h-screen p-8">

@@ -2,9 +2,10 @@
 
 import React from 'react';
 import EmptyState from '../../components/EmptyState';
+import type { Milestone } from '@/types/domain';
 
 const MilestonesPage: React.FC = () => {
-  const milestones: any[] = []; // Assume empty for now
+  const milestones: Milestone[] = [];
 
   const handleAddMilestone = () => {
     // TODO: Implement add milestone logic
