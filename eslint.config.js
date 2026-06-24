@@ -22,6 +22,8 @@ module.exports = [
         ...globals.browser,
         ...globals.node,
         ...globals.jest,
+        React: 'readonly',
+        JSX: 'readonly',
       },
     },
     plugins: {
@@ -29,6 +31,7 @@ module.exports = [
     },
     rules: {
       ...nextPlugin.rules,
+      'react-hooks/set-state-in-effect': 'off',
     },
   },
   {
@@ -44,6 +47,8 @@ module.exports = [
         ...globals.browser,
         ...globals.node,
         ...globals.jest,
+        React: 'readonly',
+        JSX: 'readonly',
       },
     },
     plugins: {
@@ -51,6 +56,7 @@ module.exports = [
     },
     rules: {
       ...nextPlugin.rules,
+      'react-hooks/set-state-in-effect': 'off',
     },
   },
 ];
