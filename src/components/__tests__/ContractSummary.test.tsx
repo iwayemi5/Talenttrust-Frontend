@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import ContractSummary from '../ContractSummary';
 import { PreferencesProvider } from '@/lib/preferences';
 import { testA11y } from '@/test-utils/a11y';
