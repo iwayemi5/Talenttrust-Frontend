@@ -60,11 +60,9 @@ const ActionPanel = ({
 
   // Confirmation dialog state
   const [confirmAction, setConfirmAction] = useState<'release' | 'dispute' | null>(null);
-  const triggerButtonRef = useRef<HTMLButtonElement>(null);
 
-  const handleOpenConfirm = (action: 'release' | 'dispute', btn: HTMLButtonElement) => {
+  const handleOpenConfirm = (action: 'release' | 'dispute') => {
     setConfirmAction(action);
-    triggerButtonRef.current = btn;
   };
 
   const handleConfirm = () => {
@@ -75,7 +73,6 @@ const ActionPanel = ({
 
   const handleCancel = () => {
     setConfirmAction(null);
-    triggerButtonRef.current?.focus();
   };
 
   return (
@@ -143,8 +140,7 @@ const ActionPanel = ({
         {actions.includes('Release Funds') && (
           <button
             type="button"
-            ref={el => (triggerButtonRef.current = el)}
-            onClick={e => handleOpenConfirm('release', e.currentTarget)}
+            onClick={() => handleOpenConfirm('release')}
             disabled={!isWalletConnected || isLoading || !!disabledReasons?.releaseFunds}
             title={!isWalletConnected ? noWalletMsg : undefined}
             aria-label="Release funds to the contractor"
@@ -158,8 +154,7 @@ const ActionPanel = ({
         {actions.includes('Dispute') && (
           <button
             type="button"
-            ref={el => (triggerButtonRef.current = el)}
-            onClick={e => handleOpenConfirm('dispute', e.currentTarget)}
+            onClick={() => handleOpenConfirm('dispute')}
             disabled={!isWalletConnected || isLoading || !!disabledReasons?.dispute}
             title={!isWalletConnected ? noWalletMsg : undefined}
             aria-label="Open a dispute for this contract"
