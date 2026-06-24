@@ -22,8 +22,14 @@ describe('ActionPanel', () => {
     expect(screen.getByRole('button', { name: /Dispute/i })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /Submit milestone/i }));
+    
+    // Release Funds flow
     fireEvent.click(screen.getByRole('button', { name: /Release funds/i }));
-    fireEvent.click(screen.getByRole('button', { name: /Dispute/i }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Release Funds' }));
+
+    // Dispute flow
+    fireEvent.click(screen.getByRole('button', { name: /Dispute/i, exact: false }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Dispute' }));
 
     expect(onSubmitMilestone).toHaveBeenCalledTimes(1);
     expect(onReleaseFunds).toHaveBeenCalledTimes(1);
@@ -81,7 +87,9 @@ describe('ActionPanel', () => {
     );
 
     fireEvent.click(releaseFunds);
+    
     fireEvent.click(dispute);
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Dispute' }));
 
     expect(onDispute).toHaveBeenCalledTimes(1);
   });

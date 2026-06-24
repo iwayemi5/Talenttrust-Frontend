@@ -67,7 +67,6 @@ describe('Navbar', () => {
     // All links must be focusable and inside the nav landmark
     links.forEach((link) => {
       expect(nav).toContainElement(link);
-      expect(link).toHaveAttribute('tabIndex', '-1'); // Link elements are naturally focusable
     });
 
     // Verify natural tab order matches DOM order

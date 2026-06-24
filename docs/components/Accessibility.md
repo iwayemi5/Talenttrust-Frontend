@@ -35,6 +35,7 @@ All a11y regression tests are colocated in `src/components/__tests__/a11y.test.t
 | `ContractSummary` | Active + multiple parties, Disputed, Completed with single milestone |
 | `ReputationProfile` | No reputation, full score + history, partial (score without history), null score |
 | `EmptyState` | Text-only, with illustration variant, with primary action, with both actions |
+| `FormField` | Default state, errored state, with helper text, required marker |
 
 ## Running
 

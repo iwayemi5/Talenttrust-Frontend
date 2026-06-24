@@ -29,10 +29,10 @@ describe('RootLayout — skip-to-content link', () => {
     expect(link).toHaveAttribute('href', '#main-content');
   });
 
-  it('skip link carries the .skip-link class', () => {
+  it('skip link carries the Tailwind sr-only classes', () => {
     renderLayout();
     const link = screen.getByRole('link', { name: /skip to main content/i });
-    expect(link).toHaveClass('skip-link');
+    expect(link).toHaveClass('sr-only');
   });
 
   it('skip link is the first focusable element — appears before the header in the DOM', () => {

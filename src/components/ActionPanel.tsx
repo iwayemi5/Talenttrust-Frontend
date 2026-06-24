@@ -1,5 +1,4 @@
-'use client';
-
+"use client";
 import React, { useState, useRef } from 'react';
 import { useWallet } from '@/contexts/WalletContext';
 import { ConfirmDialog } from './ConfirmDialog';
@@ -60,6 +59,7 @@ const ActionPanel = ({
 
   // Confirmation dialog state
   const [confirmAction, setConfirmAction] = useState<'release' | 'dispute' | null>(null);
+  const triggerButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const handleOpenConfirm = (action: 'release' | 'dispute') => {
     setConfirmAction(action);
@@ -140,7 +140,8 @@ const ActionPanel = ({
         {actions.includes('Release Funds') && (
           <button
             type="button"
-            onClick={() => handleOpenConfirm('release')}
+            ref={el => { triggerButtonRef.current = el; }}
+            onClick={e => handleOpenConfirm('release', e.currentTarget)}
             disabled={!isWalletConnected || isLoading || !!disabledReasons?.releaseFunds}
             title={!isWalletConnected ? noWalletMsg : undefined}
             aria-label="Release funds to the contractor"
@@ -154,7 +155,8 @@ const ActionPanel = ({
         {actions.includes('Dispute') && (
           <button
             type="button"
-            onClick={() => handleOpenConfirm('dispute')}
+            ref={el => { triggerButtonRef.current = el; }}
+            onClick={e => handleOpenConfirm('dispute', e.currentTarget)}
             disabled={!isWalletConnected || isLoading || !!disabledReasons?.dispute}
             title={!isWalletConnected ? noWalletMsg : undefined}
             aria-label="Open a dispute for this contract"
