@@ -131,6 +131,33 @@ Colocated tests live in `src/components/__tests__/RouteAnnouncer.test.tsx` and c
 | Multiple navigations | Correct announcement after several route changes |
 | Absent `<main>` | Component does not throw when no `<main>` exists |
 
+## ErrorSummary — form validation focus management
+
+[`ErrorSummary`](../../src/components/ErrorSummary.tsx) is rendered at the top of the sign-in form when validation fails. It is the primary accessibility hook for communicating form errors to assistive-technology users.
+
+### Behaviour
+
+- **`role="alert"`** — the container uses an ARIA live region role so screen readers announce the error summary immediately when it appears in the DOM.
+- **`tabIndex={-1}` + programmatic focus** — a `useEffect` calls `ref.current.focus()` whenever `errors.length` transitions from 0 to a positive value, or when the error list changes. This moves keyboard focus to the summary so users do not need to navigate back to find the errors.
+- **Anchor links** — each list item renders an `<a href="#fieldId">` pointing to the associated input. Activating the link moves focus directly to the invalid field.
+- **Renders nothing when empty** — when `errors` is an empty array the component returns `null`, producing no DOM output.
+
+### Test file
+
+Tests live in `src/components/__tests__/ErrorSummary.test.tsx` and cover:
+
+| Test | What is verified |
+|------|-----------------|
+| Empty render | `null` returned; no DOM output |
+| Alert region | `role="alert"` present and `tabIndex={-1}` set |
+| Anchor links | Each error produces an `<a href="#fieldId">` with the message text |
+| Focus on mount | `document.activeElement` is the summary after errors transition from empty |
+| Re-focus on update | Focus returns to summary when the error list changes |
+| Duplicate `fieldId`s | Two entries with the same `fieldId` render without React key warnings |
+| Single error | Edge-case with one error renders correctly |
+| axe audit (with errors) | No WCAG violations when the summary is visible |
+| axe audit (empty) | No WCAG violations when the summary is absent |
+
 ## Adding a new component
 
 1. Render every distinct state of the component (empty, populated, error, loading, etc.).
