@@ -1,14 +1,31 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useWallet } from '@/contexts/WalletContext';
 import { useToast } from '@/components/toast/toast-provider';
 import { truncateAddress } from '@/lib/truncateAddress';
+import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 
 export const WalletConnectButton = () => {
   const { address, isConnecting, error, connect, disconnect } = useWallet();
   const { showError } = useToast();
-  const [copied, setCopied] = useState(false);
+
+  const { copied, copy } = useCopyToClipboard({
+    delay: 2000,
+    onError: (err) => {
+      if (err instanceof Error && err.message.includes('supported')) {
+        showError({
+          title: 'Copy not supported',
+          description: 'Your browser does not support clipboard access. Please copy the address manually.',
+        });
+      } else {
+        showError({
+          title: 'Copy failed',
+          description: 'Unable to copy the address to your clipboard. Please try again.',
+        });
+      }
+    },
+  });
 
   /**
    * Copies the connected wallet address to the system clipboard.
@@ -25,26 +42,7 @@ export const WalletConnectButton = () => {
    */
   const handleCopy = async () => {
     if (!address) return;
-
-    if (!navigator?.clipboard?.writeText) {
-      showError({
-        title: 'Copy not supported',
-        description: 'Your browser does not support clipboard access. Please copy the address manually.',
-      });
-      return;
-    }
-
-    try {
-      await navigator.clipboard.writeText(address);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // Do not log the address — treat it as sensitive user data.
-      showError({
-        title: 'Copy failed',
-        description: 'Unable to copy the address to your clipboard. Please try again.',
-      });
-    }
+    await copy(address);
   };
 
   if (error) {

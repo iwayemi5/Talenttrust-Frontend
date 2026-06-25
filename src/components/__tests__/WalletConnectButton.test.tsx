@@ -464,12 +464,7 @@ describe('WalletConnectButton', () => {
 
   it('swaps the copy icon to a checkmark and reverts after 2 seconds using fake timers', async () => {
     jest.useFakeTimers();
-
-    Object.assign(navigator, {
-      clipboard: {
-        writeText: jest.fn().mockImplementation(() => Promise.resolve()),
-      },
-    });
+    mockClipboard();
 
     mockUseWallet.mockReturnValue({ ...defaultMockState, address: '0x123' });
     render(<WalletConnectButton />);
@@ -493,22 +488,26 @@ describe('WalletConnectButton', () => {
       jest.advanceTimersByTime(1);
     });
     expect(copyBtn.querySelector('path')?.getAttribute('d')).toEqual(copyIconPathBefore);
-
-    jest.useRealTimers();
   });
 
   it('has no accessibility violations in the connected state', async () => {
+    jest.useRealTimers();
     mockUseWallet.mockReturnValue({ ...defaultMockState, address: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F' });
     await testA11y(<WalletConnectButton />);
+    jest.useFakeTimers();
   });
 
   it('has no accessibility violations in the disconnected state', async () => {
+    jest.useRealTimers();
     mockUseWallet.mockReturnValue(defaultMockState);
     await testA11y(<WalletConnectButton />);
+    jest.useFakeTimers();
   });
 
   it('has no accessibility violations in the error state', async () => {
+    jest.useRealTimers();
     mockUseWallet.mockReturnValue({ ...defaultMockState, error: 'Failed to connect' });
     await testA11y(<WalletConnectButton />);
+    jest.useFakeTimers();
   });
 });
