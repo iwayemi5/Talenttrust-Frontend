@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { useWallet } from '@/contexts/WalletContext';
+import { useToast } from '@/components/toast/toast-provider';
 import { ConfirmDialog } from './ConfirmDialog';
 
 /**
@@ -66,6 +67,27 @@ const getActionButtons = (status: ActionPanelProps['status']) => {
   return ['View Summary'];
 };
 
+type ConfirmAction = 'submit' | 'release' | 'dispute' | null;
+
+const CONFIRM_COPY = {
+  // Submit milestone is confirmation-gated to match other escrow-changing actions.
+  submit: {
+    title: 'Confirm Submit Milestone',
+    description: 'Are you sure you want to submit this milestone for approval? This action cannot be undone.',
+    confirmLabel: 'Submit Milestone',
+  },
+  release: {
+    title: 'Confirm Release Funds',
+    description: 'Are you sure you want to release funds? This action cannot be undone.',
+    confirmLabel: 'Release Funds',
+  },
+  dispute: {
+    title: 'Confirm Dispute',
+    description: 'Are you sure you want to open a dispute? This action cannot be undone.',
+    confirmLabel: 'Dispute',
+  },
+} as const;
+
 const ActionPanel = ({
   status,
   onSubmitMilestone,
@@ -78,6 +100,7 @@ const ActionPanel = ({
 }: ActionPanelProps) => {
   const actions = getActionButtons(status);
   const { address } = useWallet();
+  const { showSuccess } = useToast();
   const isWalletConnected = !!address;
   const noWalletMsg = 'Connect wallet to perform this action';
 
@@ -89,17 +112,25 @@ const ActionPanel = ({
   const focusRingClass =
     'focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-blue-500';
 
-  // Confirmation dialog state
-  const [confirmAction, setConfirmAction] = useState<'release' | 'dispute' | null>(null);
+  // Confirmation dialog state tracks the currently gated escrow action.
+  const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
   const triggerButtonRef = useRef<HTMLButtonElement | null>(null);
 
-  const handleOpenConfirm = (action: 'release' | 'dispute') => {
+  const handleOpenConfirm = (action: Exclude<ConfirmAction, null>) => {
     setConfirmAction(action);
   };
 
   const handleConfirm = () => {
-    if (confirmAction === 'release') onReleaseFunds?.();
-    else if (confirmAction === 'dispute') onDispute?.();
+    if (confirmAction === 'submit') {
+      onSubmitMilestone?.();
+      showSuccess({
+        title: 'Milestone submitted',
+      });
+    } else if (confirmAction === 'release') {
+      onReleaseFunds?.();
+    } else if (confirmAction === 'dispute') {
+      onDispute?.();
+    }
     setConfirmAction(null);
   };
 
@@ -158,7 +189,7 @@ const ActionPanel = ({
         {actions.includes('Submit Milestone') && (
           <button
             type="button"
-            onClick={() => onSubmitMilestone?.()}
+            onClick={() => handleOpenConfirm('submit')}
             disabled={!isWalletConnected || isLoading || !!disabledReasons?.submitMilestone}
             title={!isWalletConnected ? noWalletMsg : undefined}
             aria-label="Submit milestone for approval"
@@ -216,9 +247,9 @@ const ActionPanel = ({
       {/* Confirmation Dialog */}
       <ConfirmDialog
         isOpen={confirmAction !== null}
-        title={confirmAction === 'release' ? 'Confirm Release Funds' : confirmAction === 'dispute' ? 'Confirm Dispute' : ''}
-        description={confirmAction === 'release' ? 'Are you sure you want to release funds? This action cannot be undone.' : confirmAction === 'dispute' ? 'Are you sure you want to open a dispute? This action cannot be undone.' : ''}
-        confirmLabel={confirmAction === 'release' ? 'Release Funds' : confirmAction === 'dispute' ? 'Dispute' : 'Confirm'}
+        title={confirmAction ? CONFIRM_COPY[confirmAction].title : ''}
+        description={confirmAction ? CONFIRM_COPY[confirmAction].description : ''}
+        confirmLabel={confirmAction ? CONFIRM_COPY[confirmAction].confirmLabel : 'Confirm'}
         cancelLabel="Cancel"
         onConfirm={handleConfirm}
         onCancel={handleCancel}

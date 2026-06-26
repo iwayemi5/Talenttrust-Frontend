@@ -29,6 +29,7 @@ The `ActionPanel` manages accessibility heavily through `aria-describedby` for d
 - Buttons use browser-native keyboard support for `Tab`, `Enter`, and `Space`.
 - Visible focus rings use high-contrast Tailwind `focus-visible:outline` utilities and are not removed in any state.
 - Actions are rendered in contract workflow order: submit milestone, release funds, dispute, then summary when applicable.
+- Submit Milestone opens the shared confirmation dialog before invoking the callback, then shows a success toast once the action is confirmed.
 - Unavailable actions stay visible as disabled buttons with an accessible reason. Use `disabledReasons` for states such as no wallet, missing permissions, pending API responses, or unmet milestone conditions.
 - Loading states disable all visible actions and describe that contract data is still loading.
 - Error states are announced through `role="alert"` without moving focus or changing the action order.
@@ -75,6 +76,7 @@ export default function ContractDetail({ contractData, isLoading, errorMessage }
 The component tests cover:
 
 - Action rendering and callback behavior for active and completed contracts.
+- Confirmable Submit Milestone, including success toast feedback and cancel/disconnected-wallet cases.
 - Logical button order for keyboard navigation.
 - Visible focus ring classes on every enabled action.
 - Disabled action semantics and screen-reader descriptions.
