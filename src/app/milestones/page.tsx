@@ -49,13 +49,18 @@ const SAMPLE_MILESTONES: Milestone[] = [
   },
 ];
 
-const MilestonesPage: React.FC = () => {
+interface MilestonesPageProps {
+  /** Optional milestone list used by the page and tests. */
+  milestones?: Milestone[];
+}
+
+const MilestonesPage: React.FC<MilestonesPageProps> = ({ milestones = SAMPLE_MILESTONES }) => {
   const [statusFilter, setStatusFilter] = useState<MilestoneStatusFilter>('All');
 
   const filtered = useMemo(() => {
-    if (statusFilter === 'All') return SAMPLE_MILESTONES;
-    return SAMPLE_MILESTONES.filter((m) => m.status === statusFilter);
-  }, [statusFilter]);
+    if (statusFilter === 'All') return milestones;
+    return milestones.filter((m) => m.status === statusFilter);
+  }, [milestones, statusFilter]);
 
   const handleAddMilestone = () => {
     console.log('Add milestone');
@@ -65,7 +70,7 @@ const MilestonesPage: React.FC = () => {
     <main className="min-h-screen p-8">
       <h1 className="text-2xl font-bold mb-6">Milestones</h1>
 
-      {SAMPLE_MILESTONES.length === 0 ? (
+      {milestones.length === 0 ? (
         <EmptyState
           illustration="milestones"
           title="No milestones tracked"
