@@ -1,5 +1,4 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import { ToastProvider } from '@/components/toast/toast-provider';
 import ContractDetailPage from '../page';
 import * as contractResolver from '@/lib/contractResolver';
 
@@ -15,6 +14,17 @@ jest.mock('next/link', () => {
 
 // Mock the contract resolver
 jest.mock('@/lib/contractResolver');
+
+const mockShowSuccess = jest.fn();
+
+jest.mock('@/components/toast/toast-provider', () => ({
+  useToast: jest.fn(() => ({
+    showSuccess: mockShowSuccess,
+    showError: jest.fn(),
+    toasts: [],
+    dismissToast: jest.fn(),
+  })),
+}));
 
 describe('ContractDetailPage', () => {
   beforeEach(() => {
@@ -73,11 +83,7 @@ describe('ContractDetailPage', () => {
   it('renders the contract overview and action panel after successful load', async () => {
     const params = Promise.resolve({ id: '123' });
     const Component = await ContractDetailPage({ params });
-    render(
-      <ToastProvider>
-        {Component}
-      </ToastProvider>
-    );
+    render(Component);
 
     await waitFor(() => {
       expect(screen.getByText('Contract #123')).toBeInTheDocument();
@@ -140,11 +146,7 @@ describe('ContractDetailPage', () => {
   it('keeps the "Back to contracts" link for a valid id', async () => {
     const params = Promise.resolve({ id: 'contract-42' });
     const Component = await ContractDetailPage({ params });
-    render(
-      <ToastProvider>
-        {Component}
-      </ToastProvider>
-    );
+    render(Component);
 
     expect(screen.getByRole('link', { name: /back to contracts/i })).toHaveAttribute('href', '/contracts');
   });
