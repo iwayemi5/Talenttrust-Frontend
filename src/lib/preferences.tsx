@@ -1,6 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { getItem, setItem } from './safeStorage';
+
 
 export type Theme = 'light' | 'dark' | 'system';
 export type AmountFormat = 'usd' | 'ngn' | 'compact';
@@ -36,10 +38,9 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
 
   // Load from localStorage on mount
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
+    const saved = getItem(STORAGE_KEY);
     if (saved) {
       try {
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrating user preferences from localStorage on mount is a common pattern; this does not cascade because it only runs once
         setPreferences({ ...DEFAULT_PREFERENCES, ...JSON.parse(saved) });
       } catch (e) {
         console.error('Failed to parse preferences', e);
@@ -51,7 +52,7 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
   // Save to localStorage when preferences change
   useEffect(() => {
     if (isHydrated) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
+      setItem(STORAGE_KEY, JSON.stringify(preferences));
     }
   }, [preferences, isHydrated]);
 

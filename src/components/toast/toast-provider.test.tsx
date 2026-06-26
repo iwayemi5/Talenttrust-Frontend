@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { StrictMode } from 'react';
+import { PreferencesProvider } from '@/lib/preferences';
 import { ToastProvider, useToast } from './toast-provider';
 
 function ToastHarness() {
@@ -41,7 +42,9 @@ describe('ToastProvider', () => {
   });
 
   afterEach(() => {
-    jest.clearAllTimers();
+    act(() => {
+      jest.clearAllTimers();
+    });
     jest.useRealTimers();
   });
 
@@ -196,6 +199,70 @@ describe('ToastProvider', () => {
     expect(uniqueIds.size).toBe(1);
   });
 
+  it('pauses auto-dismiss while a toast is hovered', async () => {
+    render(
+      <ToastProvider>
+        <ToastHarness />
+      </ToastProvider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /trigger success/i }));
+
+    act(() => {
+      jest.advanceTimersByTime(1500);
+    });
+
+    fireEvent.mouseEnter(screen.getByRole('status'));
+
+    act(() => {
+      jest.advanceTimersByTime(2000);
+    });
+
+    expect(screen.getByRole('status')).toBeInTheDocument();
+
+    fireEvent.mouseLeave(screen.getByRole('status'));
+
+    act(() => {
+      jest.advanceTimersByTime(500);
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    });
+  });
+
+  it('pauses auto-dismiss while a toast is focused', async () => {
+    render(
+      <ToastProvider>
+        <ToastHarness />
+      </ToastProvider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /trigger success/i }));
+
+    act(() => {
+      jest.advanceTimersByTime(1500);
+    });
+
+    fireEvent.focus(screen.getByRole('button', { name: /dismiss success notification/i }));
+
+    act(() => {
+      jest.advanceTimersByTime(2000);
+    });
+
+    expect(screen.getByRole('status')).toBeInTheDocument();
+
+    fireEvent.blur(screen.getByRole('button', { name: /dismiss success notification/i }));
+
+    act(() => {
+      jest.advanceTimersByTime(500);
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    });
+  });
+
   it('dismisses toast by returned id', async () => {
     let returnedId: string | null = null;
 
@@ -240,5 +307,182 @@ describe('ToastProvider', () => {
     await waitFor(() => {
       expect(screen.queryByRole('status')).not.toBeInTheDocument();
     });
+  });
+});
+
+describe('quietMode', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.clearAllTimers();
+    jest.useRealTimers();
+  });
+
+  it('suppresses success toasts when quietMode is true and returns "suppressed"', () => {
+    localStorage.setItem(
+      'talenttrust-user-preferences',
+      JSON.stringify({ quietMode: true }),
+    );
+
+    let result: string | null = null;
+
+    function QuietModeHarness() {
+      const { showSuccess } = useToast();
+      return (
+        <button
+          onClick={() => {
+            result = showSuccess({ title: 'Quiet test' });
+          }}
+          type="button"
+        >
+          Trigger
+        </button>
+      );
+    }
+
+    render(
+      <PreferencesProvider>
+        <ToastProvider>
+          <QuietModeHarness />
+        </ToastProvider>
+      </PreferencesProvider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /trigger/i }));
+
+    expect(result).toBe('suppressed');
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
+  it('does not suppress error toasts when quietMode is true', () => {
+    localStorage.setItem(
+      'talenttrust-user-preferences',
+      JSON.stringify({ quietMode: true }),
+    );
+
+    let result: string | null = null;
+
+    function QuietModeErrorHarness() {
+      const { showError } = useToast();
+      return (
+        <button
+          onClick={() => {
+            result = showError({ title: 'Error test' });
+          }}
+          type="button"
+        >
+          Trigger error
+        </button>
+      );
+    }
+
+    render(
+      <PreferencesProvider>
+        <ToastProvider>
+          <QuietModeErrorHarness />
+        </ToastProvider>
+      </PreferencesProvider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /trigger error/i }));
+
+    expect(result).not.toBe('suppressed');
+    expect(result).toMatch(/^toast-/);
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+  });
+});
+
+describe('density', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.clearAllTimers();
+    jest.useRealTimers();
+  });
+
+  it('renders viewport with relaxed (gap-3) spacing by default', () => {
+    render(
+      <ToastProvider>
+        <ToastHarness />
+      </ToastProvider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /trigger success/i }));
+
+    const viewport = screen.getByLabelText('Notifications');
+    expect(viewport.className).toMatch(/gap-3/);
+  });
+
+  it('renders viewport with compact (gap-1.5) spacing when toastDensity is compact', () => {
+    localStorage.setItem(
+      'talenttrust-user-preferences',
+      JSON.stringify({ toastDensity: 'compact' }),
+    );
+
+    render(
+      <PreferencesProvider>
+        <ToastProvider>
+          <ToastHarness />
+        </ToastProvider>
+      </PreferencesProvider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /trigger success/i }));
+
+    const viewport = screen.getByLabelText('Notifications');
+    expect(viewport.className).toMatch(/gap-1\.5/);
+  });
+});
+
+describe('default duration', () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.clearAllTimers();
+    jest.useRealTimers();
+  });
+
+  it('uses DEFAULT_DURATION (5000ms) when no duration is provided', () => {
+    function DefaultDurationHarness() {
+      const { showSuccess } = useToast();
+      return (
+        <button
+          onClick={() => showSuccess({ title: 'Default duration' })}
+          type="button"
+        >
+          Trigger
+        </button>
+      );
+    }
+
+    render(
+      <ToastProvider>
+        <DefaultDurationHarness />
+      </ToastProvider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /trigger/i }));
+    expect(screen.getByRole('status')).toBeInTheDocument();
+
+    // Toast should still be visible after 3000ms (before the default 5000ms expires)
+    act(() => {
+      jest.advanceTimersByTime(3000);
+    });
+    expect(screen.getByRole('status')).toBeInTheDocument();
+
+    // After 5000ms total it should be dismissed
+    act(() => {
+      jest.advanceTimersByTime(2000);
+    });
+
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 });

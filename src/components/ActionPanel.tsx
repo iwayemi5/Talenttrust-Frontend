@@ -1,6 +1,8 @@
 'use client';
 
+import React, { useState, useRef } from 'react';
 import { useWallet } from '@/contexts/WalletContext';
+import { ConfirmDialog } from './ConfirmDialog';
 
 export type ActionPanelDisabledReasons = {
   submitMilestone?: string;
@@ -27,15 +29,9 @@ const LOADING_REASON = 'Action is disabled while contract data is loading.';
 const LOADING_DESCRIPTION_ID = 'action-panel-loading-reason';
 
 const getActionButtons = (status: ActionPanelProps['status']) => {
-  if (status === 'Active') {
-    return ['Submit Milestone', 'Release Funds', 'Dispute'];
-  }
-  if (status === 'Pending') {
-    return ['Release Funds', 'Dispute'];
-  }
-  if (status === 'Disputed') {
-    return ['Dispute'];
-  }
+  if (status === 'Active') return ['Submit Milestone', 'Release Funds', 'Dispute'];
+  if (status === 'Pending') return ['Release Funds', 'Dispute'];
+  if (status === 'Disputed') return ['Dispute'];
   return ['View Summary'];
 };
 
@@ -62,6 +58,24 @@ const ActionPanel = ({
   const focusRingClass =
     'focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-blue-500';
 
+  // Confirmation dialog state
+  const [confirmAction, setConfirmAction] = useState<'release' | 'dispute' | null>(null);
+  const triggerButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  const handleOpenConfirm = (action: 'release' | 'dispute') => {
+    setConfirmAction(action);
+  };
+
+  const handleConfirm = () => {
+    if (confirmAction === 'release') onReleaseFunds?.();
+    else if (confirmAction === 'dispute') onDispute?.();
+    setConfirmAction(null);
+  };
+
+  const handleCancel = () => {
+    setConfirmAction(null);
+  };
+
   return (
     <aside
       aria-labelledby="action-panel-heading"
@@ -69,10 +83,7 @@ const ActionPanel = ({
     >
       <div className="mb-6">
         <p className="text-sm text-slate-500 uppercase tracking-[0.24em]">Action Panel</p>
-        <h2
-          id="action-panel-heading"
-          className="mt-2 text-xl font-semibold text-slate-900"
-        >
+        <h2 id="action-panel-heading" className="mt-2 text-xl font-semibold text-slate-900">
           What would you like to do?
         </h2>
         {!isWalletConnected && (
@@ -81,10 +92,7 @@ const ActionPanel = ({
           </p>
         )}
         {errorMessage && (
-          <p
-            role="alert"
-            className="mt-2 text-sm text-rose-700 bg-rose-50 p-2 rounded-lg border border-rose-200"
-          >
+          <p role="alert" className="mt-2 text-sm text-rose-700 bg-rose-50 p-2 rounded-lg border border-rose-200">
             {errorMessage}
           </p>
         )}
@@ -133,7 +141,8 @@ const ActionPanel = ({
         {actions.includes('Release Funds') && (
           <button
             type="button"
-            onClick={() => onReleaseFunds?.()}
+            ref={el => { triggerButtonRef.current = el; }}
+            onClick={() => handleOpenConfirm('release')}
             disabled={!isWalletConnected || isLoading || !!disabledReasons?.releaseFunds}
             title={!isWalletConnected ? noWalletMsg : undefined}
             aria-label="Release funds to the contractor"
@@ -147,7 +156,8 @@ const ActionPanel = ({
         {actions.includes('Dispute') && (
           <button
             type="button"
-            onClick={() => onDispute?.()}
+            ref={el => { triggerButtonRef.current = el; }}
+            onClick={() => handleOpenConfirm('dispute')}
             disabled={!isWalletConnected || isLoading || !!disabledReasons?.dispute}
             title={!isWalletConnected ? noWalletMsg : undefined}
             aria-label="Open a dispute for this contract"
@@ -171,6 +181,17 @@ const ActionPanel = ({
           </button>
         )}
       </div>
+
+      {/* Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={confirmAction !== null}
+        title={confirmAction === 'release' ? 'Confirm Release Funds' : confirmAction === 'dispute' ? 'Confirm Dispute' : ''}
+        description={confirmAction === 'release' ? 'Are you sure you want to release funds? This action cannot be undone.' : confirmAction === 'dispute' ? 'Are you sure you want to open a dispute? This action cannot be undone.' : ''}
+        confirmLabel={confirmAction === 'release' ? 'Release Funds' : confirmAction === 'dispute' ? 'Dispute' : 'Confirm'}
+        cancelLabel="Cancel"
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      />
     </aside>
   );
 };

@@ -1,15 +1,22 @@
 import React from 'react';
 import { render, act, renderHook, screen, fireEvent } from '@testing-library/react';
 import { PreferencesProvider, usePreferences } from '../preferences';
+import { resetCache } from '../safeStorage';
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
   <PreferencesProvider>{children}</PreferencesProvider>
 );
 
+beforeEach(() => {
+  localStorage.clear();
+  resetCache();
+});
+
+afterEach(() => {
+  jest.restoreAllMocks();
+});
+
 describe('PreferencesProvider', () => {
-  beforeEach(() => {
-    localStorage.clear();
-  });
 
   it('provides default preferences', () => {
     const { result } = renderHook(() => usePreferences(), { wrapper });
@@ -177,7 +184,7 @@ describe('persistence and re-render', () => {
     expect(saved.quietMode).toBe(true);
 
     // Simulate new page load
-    const { result: fresh } = renderHook(() => usePreferences(), { wrapper });
+    renderHook(() => usePreferences(), { wrapper });
     act(() => {}); // flush effects
     // fresh hook loads from the saved localStorage value set above
     expect(JSON.parse(localStorage.getItem('talenttrust-user-preferences') || '{}').quietMode).toBe(true);
@@ -224,3 +231,4 @@ describe('usePreferences outside provider', () => {
     expect(result.current.formatAmount(100, 'EUR')).toBe(expected);
   });
 });
+

@@ -34,6 +34,9 @@ describe('WalletContext persistence', () => {
   });
 
   afterEach(() => {
+    act(() => {
+      jest.runOnlyPendingTimers();
+    });
     jest.useRealTimers();
   });
 

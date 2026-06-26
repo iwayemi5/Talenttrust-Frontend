@@ -2,6 +2,7 @@
 
 import React, { Component, ReactNode } from 'react';
 import Link from 'next/link';
+import { reportError } from '../lib/errorReporter';
 
 interface Props {
   children: ReactNode;
@@ -19,10 +20,8 @@ export default class SafeBoundary extends Component<Props, State> {
     return { hasError: true };
   }
 
-  componentDidCatch(error: Error, info: React.ErrorInfo) {
-    if (process.env.NODE_ENV !== 'production') {
-      console.error('[SafeBoundary]', error, info.componentStack);
-    }
+  componentDidCatch(error: Error, _info: React.ErrorInfo) {
+    reportError(error, 'SafeBoundary');
   }
 
   reset = () => this.setState({ hasError: false });

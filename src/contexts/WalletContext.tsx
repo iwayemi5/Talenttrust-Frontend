@@ -99,11 +99,11 @@ export function WalletProvider({
     setIsConnecting(true);
     setError(null);
     try {
-      await new Promise(res => setTimeout(res, 1000));
-      const addr = '0x71C7656EC7ab88b098defB751B7401B5f6d8976F';
-      setAddress(addr);
-      safeStorage.setItem(STORAGE_KEY, addr);
-    } catch (e) {
+      // Mocking wallet connection delay
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Mocked address
+      setAddress('0x71C7656EC7ab88b098defB751B7401B5f6d8976F');
+    } catch (_err) {
       setError('Failed to connect wallet');
     } finally {
       setIsConnecting(false);
