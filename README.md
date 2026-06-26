@@ -33,6 +33,35 @@ Open [http://localhost:3000](http://localhost:3000).
 | `npm run lint` | Run ESLint             |
 | `npm test`    | Run Jest tests           |
 
+## Architecture
+
+The project is built on Next.js App Router. The UI layer shares components, whilst global state is handled via an ordered provider stack.
+
+### Route Map
+
+| Route | Description | Status |
+|-------|-------------|--------|
+| `/` | Landing page / Home | Placeholder (contains a login form demo and toast demo) |
+| `/contracts` | Contracts list | Placeholder handler (uses local storage stub) |
+| `/contracts/[id]` | Contract details | Placeholder (sample milestones and stubbed action handlers) |
+| `/milestones` | Milestones list | Implemented (filterable status list) |
+| `/reputation` | User reputation | Placeholder (empty state) |
+
+### Provider Stack
+
+Providers are wired in `src/app/layout.tsx` with a specific nesting order:
+
+1. **[`PreferencesProvider`](src/lib/preferences.tsx)** (Outermost)
+   Provides user-level preferences (locale, currency) which can be consumed by any subsequent provider or component.
+2. **[`ToastProvider`](src/components/toast/toast-provider.tsx)**
+   Provides the global notification system. Placed here so that the wallet context or other deeper components can trigger alerts.
+3. **[`WalletProvider`](src/contexts/WalletContext.tsx)** (Innermost)
+   Manages Stellar wallet connections. It can consume preferences and dispatch toast notifications if connections fail or succeed.
+
+### Shared Components
+
+Shared components live in `src/components/` (e.g., `src/components/toast/`). Shared utilities and domain types live in `src/lib/` and `src/types/`.
+
 ## Toast notifications
 
 The app includes a global accessible toast system for transient feedback:
